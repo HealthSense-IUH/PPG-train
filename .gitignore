@@ -1,0 +1,38 @@
+# Ignore virtual environment
+
+.venv/
+
+# Ignore data, models, and outputs folders
+
+data/
+models/
+archive/
+arm/
+wrist-down/
+wrist-up/
+outputs/
+reports/
+
+# Ignore all CSV files
+
+*.csv
+
+# Optional: ignore system / editor files
+
+**pycache**/
+*.pyc
+*.pyo
+*.pyd
+
+# VS Code settings (optional)
+
+.vscode/
+
+# Jupyter notebook checkpoints
+
+.ipynb_checkpoints/
+
+# OS files
+
+.DS_Store
+Thumbs.db
