@@ -22,8 +22,8 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score
 
 # Define paths
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-CONSOLIDATED_CSV = PROJECT_ROOT / "outputs" / "vilnius_features_consolidated.csv"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+CONSOLIDATED_CSV = PROJECT_ROOT / "data" / "processed" / "vilnius_features_consolidated.csv"
 MODEL_DIR        = PROJECT_ROOT / "models"
 MODEL_PATH       = MODEL_DIR / "ppg_af_rf.joblib"
 METADATA_PATH    = MODEL_DIR / "ppg_af_rf_metadata.json"

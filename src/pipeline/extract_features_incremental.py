@@ -23,13 +23,13 @@ import numpy as np
 import pandas as pd
 
 # Define paths
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DATA_DIR     = PROJECT_ROOT / "data"
-OUTPUT_CSV   = PROJECT_ROOT / "outputs" / "vilnius_features_consolidated.csv"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+DATA_DIR     = PROJECT_ROOT / "data" / "raw"
+OUTPUT_CSV   = PROJECT_ROOT / "data" / "processed" / "vilnius_features_consolidated.csv"
 
-# Add code folder to path and import pipeline functions
-sys.path.insert(0, str(PROJECT_ROOT / "code"))
-from ppg_pipeline import (
+# Add src folder to path and import pipeline functions
+sys.path.insert(0, str(PROJECT_ROOT / "src"))
+from pipeline.ppg_pipeline import (
     build_feature_matrix,
     preprocess_ppg,
     segment_signal,

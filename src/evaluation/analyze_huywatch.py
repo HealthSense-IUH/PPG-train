@@ -1,8 +1,10 @@
 import pandas as pd
 import numpy as np
 from scipy.signal import butter, filtfilt, find_peaks
+from pathlib import Path
 
-df = pd.read_csv("archive/huywatch-ppg-20260623-132651 (1).csv")
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+df = pd.read_csv(PROJECT_ROOT / "data" / "raw" / "huywatch" / "huywatch-ppg-20260623-132651 (1).csv")
 t_ms = df["device_millis"].values
 ir = df["ir"].values.astype(float)
 red = df["red"].values.astype(float)

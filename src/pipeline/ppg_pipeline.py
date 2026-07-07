@@ -32,11 +32,11 @@ def _read_ppg_csv(csv_path: Path, fs_fallback: int = DEFAULT_FS) -> dict[str, An
 
 
 def load_archive_dataset(archive_root: str | Path, fs_fallback: int = DEFAULT_FS) -> np.ndarray:
-    """Load records from archive/af and archive/non-af folder structure.
+    """Load records from data/raw/mimic/af and data/raw/mimic/non-af folder structure.
 
     Expected layout::
 
-        archive/
+        data/raw/mimic/
           af/
             mimic_perform_af_001_data.csv
             ...
@@ -66,7 +66,7 @@ def load_archive_dataset(archive_root: str | Path, fs_fallback: int = DEFAULT_FS
     if not records:
         raise FileNotFoundError(
             f"No dataset CSV files found under {archive_root}. "
-            "Check that archive/af/ and archive/non-af/ contain *_data.csv files."
+            "Check that af/ and non-af/ contain *_data.csv files."
         )
 
     return np.asarray(records, dtype=object)
@@ -77,7 +77,7 @@ def load_mimic_perform_csv_dataset(data_root: str | Path, fs_fallback: int = DEF
 
     .. deprecated::
         Use :func:`load_archive_dataset` instead, which matches the actual
-        ``archive/af`` and ``archive/non-af`` directory layout.
+        ``data/raw/mimic/af`` and ``data/raw/mimic/non-af`` directory layout.
     """
     data_root = Path(data_root)
     dataset_specs = [

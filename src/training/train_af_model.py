@@ -39,16 +39,16 @@ from sklearn.metrics import (
 # ---------------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------------
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-ARCHIVE_ROOT = PROJECT_ROOT / "archive"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+ARCHIVE_ROOT = PROJECT_ROOT / "data" / "raw" / "mimic"
 MODELS_DIR   = PROJECT_ROOT / "models"
 REPORTS_DIR  = PROJECT_ROOT / "reports"
 
 MODELS_DIR.mkdir(parents=True, exist_ok=True)
 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
-sys.path.insert(0, str(PROJECT_ROOT / "code"))
-from ppg_pipeline import (  # noqa: E402
+sys.path.insert(0, str(PROJECT_ROOT / "src"))
+from pipeline.ppg_pipeline import (  # noqa: E402
     build_feature_matrix,
     get_recording_fs,
     get_recording_label,
@@ -394,7 +394,7 @@ def main() -> None:
     print(f"  CV ROC-AUC         : {mean_auc:.4f} +/- {std_auc:.4f}")
     print(f"  CV AF  Recall      : {mean_rec_af:.4f}")
     print(f"  CV Non-AF Recall   : {mean_rec_naf:.4f}")
-    print(f"  Run Streamlit app  : streamlit run code/ppg_app.py")
+    print(f"  Run Streamlit app  : streamlit run src/app/ppg_app.py")
 
 
 if __name__ == "__main__":

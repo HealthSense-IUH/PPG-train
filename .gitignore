@@ -6,11 +6,6 @@
 
 data/
 models/
-archive/
-arm/
-wrist-down/
-wrist-up/
-outputs/
 reports/
 
 # Ignore all CSV files

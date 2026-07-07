@@ -4,24 +4,24 @@ import numpy as np
 import pandas as pd
 import joblib
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(PROJECT_ROOT / "code"))
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
-from ppg_pipeline import (
+from pipeline.ppg_pipeline import (
     preprocess_ppg,
     segment_signal,
     build_feature_matrix,
     check_window_quality,
     resample_to_target_fs
 )
-from ppg_pipeline_apg import (
+from pipeline.ppg_pipeline_apg import (
     preprocess_ppg_apg,
     segment_and_extract_apg_features
 )
 
 OLD_MODEL_PATH = PROJECT_ROOT / "models" / "ppg_af_rf.joblib"
 NEW_MODEL_PATH = PROJECT_ROOT / "models" / "ppg_af_rf_apg.joblib"
-WRIST_DIR = PROJECT_ROOT / "wrist-down"
+WRIST_DIR = PROJECT_ROOT / "data" / "raw" / "huywatch" / "wrist-down"
 
 def load_huywatch(csv_path: Path, channel: str = "ir") -> tuple[np.ndarray, float]:
     df = pd.read_csv(csv_path)
@@ -186,7 +186,7 @@ def main():
     report_lines.append(f"  - Mô hình mới dự đoán tổng cộng **{total_af_new_80}** cửa sổ là AF.")
     
     # Save to file
-    out_path = PROJECT_ROOT / "outputs" / "model_comparison_wrist_down.md"
+    out_path = PROJECT_ROOT / "reports" / "model_comparison_wrist_down.md"
     out_path.write_text("\n".join(report_lines), encoding="utf-8")
     print(f"\nSaved markdown report to: {out_path}")
 
