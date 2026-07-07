@@ -8,9 +8,11 @@ with Huywatch-like format (device_millis, red, ir) for easy testing in the app.
 import h5py
 import pandas as pd
 import numpy as np
+from pathlib import Path
 
-ppg_mat = "D:/DATT/PPG-Arrhythmia-Detection/data/001_PPG.mat"
-output_csv = "D:/DATT/PPG-Arrhythmia-Detection/outputs/vilnius_wrist_af_sample.csv"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+ppg_mat = PROJECT_ROOT / "data" / "raw" / "001_PPG.mat"
+output_csv = PROJECT_ROOT / "data" / "processed" / "vilnius_wrist_af_sample.csv"
 
 def get_hdf5_text(f, ref):
     obj = f[ref]

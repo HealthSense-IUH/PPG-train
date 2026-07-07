@@ -37,22 +37,22 @@ Windowed PPG -> LSTM Baseline -> Evaluation -> SHAP Explainability
 
 ## 📊 Dataset
 
-**MIMIC PERform AF dataset** (CSV format in `data/`)
+**MIMIC PERform AF dataset** (CSV format in `data/raw/mimic/`)
 
 * Sampling rate: ~125 Hz
 * Labels: AF = `1`, Non-AF = `0`
 * Folder structure expected:
 
 ```text
-data/mimic_perform_af_csv/mimic_perform_af_csv/
-data/mimic_perform_non_af_csv/mimic_perform_non_af_csv/
+data/raw/mimic/af/
+data/raw/mimic/non-af/
 ```
 
 > ⚠️ Raw data is not included due to redistribution restrictions.
 
 ---
 
-## 🧹 Data Preprocessing (`code/ppg_pipeline.py`)
+## 🧹 Data Preprocessing (`src/pipeline/ppg_pipeline.py`)
 
 * Linear interpolation for invalid values (`NaN`, `Inf`)
 * Band-pass filter: 0.5–8.0 Hz
@@ -96,7 +96,7 @@ Designed to capture **pulse morphology & rhythm irregularity**:
 
 ## 🔍 Explainability
 
-**SHAP in `code/af_rnn.ipynb`:**
+**SHAP in `notebooks/af_rnn.ipynb`:**
 
 * GradientExplainer: LSTM sequence-level
 * TreeExplainer: Random Forest
@@ -136,7 +136,7 @@ Designed to capture **pulse morphology & rhythm irregularity**:
 
 ---
 
-## 🖥 Streamlit Dashboard (`code/ppg_app.py`)
+## 🖥 Streamlit Dashboard (`src/app/ppg_app.py`)
 
 **Capabilities:**
 
@@ -155,13 +155,22 @@ Designed to capture **pulse morphology & rhythm irregularity**:
 
 ```text
 PPG-Arrhythmia-Detection/
-|-- code/
-|   |-- af_rnn.ipynb
-|   |-- ppg_app.py
-|   |-- ppg_pipeline.py
-|   `-- example_generate.py
-|-- requirements.txt
-`-- README.md
+├── data/
+│   ├── raw/
+│   │   ├── mimic/              # MIMIC-III (af/, non-af/)
+│   │   └── huywatch/           # Huywatch CSV files (arm/, wrist-up/, wrist-down/)
+│   ├── processed/              # Processed / Extracted features
+│   └── predictions/            # Prediction output files
+├── src/
+│   ├── pipeline/               # Preprocessing & feature extraction
+│   ├── training/               # Model training scripts
+│   ├── evaluation/             # Model evaluation & prediction scripts
+│   └── app/                    # Streamlit dashboards
+├── notebooks/                  # Jupyter notebooks (af_rnn.ipynb)
+├── models/                     # Saved trained models (.joblib, .keras)
+├── reports/                    # Generated summary reports & metrics
+├── requirements.txt
+└── README.md
 ```
 
 ---
@@ -185,7 +194,7 @@ pip install -r requirements.txt
 
 ### 1️⃣ Notebook
 
-Open `code/af_rnn.ipynb` → run all cells to:
+Open `notebooks/af_rnn.ipynb` → run all cells to:
 
 * Load & preprocess PPG data
 * Window the signals
@@ -197,8 +206,7 @@ Open `code/af_rnn.ipynb` → run all cells to:
 ### 2️⃣ Streamlit App
 
 ```bash
-cd code
-streamlit run ppg_app.py
+streamlit run src/app/ppg_app.py
 ```
 
 * Upload PPG CSV

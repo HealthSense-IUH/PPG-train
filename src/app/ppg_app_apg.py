@@ -10,14 +10,15 @@ import streamlit as st
 
 st.set_page_config(page_title="PPG APG AF Classifier", layout="wide")
 
-# Add code folder to path and import pipeline functions
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from ppg_pipeline_apg import (
+# Add src folder to path and import pipeline functions
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(PROJECT_ROOT / "src"))
+from pipeline.ppg_pipeline_apg import (
     segment_and_extract_apg_features,
     detect_apg_peaks_and_feet,
     preprocess_ppg_apg,
 )
-from ppg_pipeline import check_window_quality
+from pipeline.ppg_pipeline import check_window_quality
 
 TRAIN_FS = 125  # Hz — must match the fs used during model training
 
@@ -95,7 +96,7 @@ st.markdown(
 # -----------------------------
 # Load trained model
 # -----------------------------
-MODEL_DIR = Path(__file__).resolve().parent.parent / "models"
+MODEL_DIR = PROJECT_ROOT / "models"
 MODEL_PATH = MODEL_DIR / "ppg_af_rf_apg.joblib"
 
 model = None

@@ -27,15 +27,17 @@ import pandas as pd
 # ---------------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------------
-PROJECT_ROOT  = Path(__file__).resolve().parent.parent
-DEFAULT_FILE  = PROJECT_ROOT / "archive" / "huywatch-ppg-20260623-132651 (1).csv"
+PROJECT_ROOT  = Path(__file__).resolve().parent.parent.parent
+DEFAULT_FILE  = PROJECT_ROOT / "data" / "raw" / "huywatch" / "huywatch-ppg-20260623-132651 (1).csv"
 MODEL_PATH    = PROJECT_ROOT / "models" / "ppg_af_rf.joblib"
-OUTPUTS_DIR   = PROJECT_ROOT / "outputs"
+PREDICTIONS_DIR = PROJECT_ROOT / "data" / "predictions"
+REPORTS_DIR   = PROJECT_ROOT / "reports"
 
-OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
+PREDICTIONS_DIR.mkdir(parents=True, exist_ok=True)
+REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
-sys.path.insert(0, str(PROJECT_ROOT / "code"))
-from ppg_pipeline import (  # noqa: E402
+sys.path.insert(0, str(PROJECT_ROOT / "src"))
+from pipeline.ppg_pipeline import (  # noqa: E402
     bandpass_filter,
     build_feature_matrix,
     detect_beats,
@@ -308,7 +310,7 @@ def main(args: argparse.Namespace) -> None:
     # ------------------------------------------------------------------
     print_section("8. Saving outputs")
 
-    pred_path = OUTPUTS_DIR / "huywatch_predictions.csv"
+    pred_path = PREDICTIONS_DIR / "huywatch_predictions.csv"
     df_pred.to_csv(pred_path, index=False)
     print(f"  Predictions CSV : {pred_path}")
 
@@ -340,7 +342,7 @@ def main(args: argparse.Namespace) -> None:
             f"{row['End_Time_Sec']:>7.1f}s  {row['Label']:>7}  {row['AF_Probability']:>8.4f}"
         )
 
-    summary_path = OUTPUTS_DIR / "huywatch_summary.txt"
+    summary_path = REPORTS_DIR / "huywatch_summary.txt"
     summary_path.write_text("\n".join(summary_lines), encoding="utf-8")
     print(f"  Summary TXT     : {summary_path}")
 

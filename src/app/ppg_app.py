@@ -10,9 +10,10 @@ import streamlit as st
 
 st.set_page_config(page_title="PPG AF Classifier", layout="wide")
 
-# Add code folder to path and import pipeline functions
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from ppg_pipeline import (
+# Add src folder to path and import pipeline functions
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(PROJECT_ROOT / "src"))
+from pipeline.ppg_pipeline import (
     build_feature_matrix,
     detect_beats,
     preprocess_ppg,
@@ -95,17 +96,55 @@ st.markdown(
 )
 
 # -----------------------------
-# Load trained model
+# Load trained models
 # -----------------------------
-MODEL_DIR = Path(__file__).resolve().parent.parent / "models"
-MODEL_PATH = MODEL_DIR / "ppg_af_rf.joblib"
+MODEL_DIR = PROJECT_ROOT / "models"
 
-model = None
+@st.cache_resource
+def load_baseline_rf():
+    path = MODEL_DIR / "ppg_af_rf.joblib"
+    return joblib.load(path)
+
+@st.cache_resource
+def load_hybrid_models():
+    hybrid_rf = joblib.load(MODEL_DIR / "ppg_af_hybrid_rf.joblib")
+    scaler = joblib.load(MODEL_DIR / "ppg_scaler.joblib")
+    
+    # Import tensorflow locally inside cached function
+    import os
+    os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+    import tensorflow as tf
+    cnn_model = tf.keras.models.load_model(MODEL_DIR / "ppg_af_cnn_bilstm.keras")
+    
+    return hybrid_rf, cnn_model, scaler
+
+# Sidebar for Model Selection
+st.sidebar.header("Model Selection")
+model_type = st.sidebar.selectbox(
+    "Choose Model (Chọn Mô Hình)",
+    options=["Baseline RF (HRV only)", "Hybrid Model (Fusion)"],
+    index=1,
+    key="model_type_select",
+    help="Baseline RF sử dụng 9 đặc trưng HRV truyền thống. Hybrid Model kết hợp đặc trưng HRV với 16 đặc trưng học sâu tự động."
+)
+
+rf_model = None
+hybrid_rf = None
+cnn_model = None
+scaler = None
 model_load_error = None
-try:
-    model = joblib.load(MODEL_PATH)
-except FileNotFoundError:
-    model_load_error = f"Random Forest model not found at {MODEL_PATH}."
+
+if model_type == "Baseline RF (HRV only)":
+    try:
+        rf_model = load_baseline_rf()
+        model = rf_model
+    except Exception as e:
+        model_load_error = f"Lỗi tải mô hình Baseline RF: {e}"
+else:
+    try:
+        hybrid_rf, cnn_model, scaler = load_hybrid_models()
+    except Exception as e:
+        model_load_error = f"Lỗi tải mô hình Hybrid: {e}. Vui lòng kiểm tra các file mô hình trong thư mục models/."
 
 # -----------------------------
 # Sidebar for settings
@@ -279,15 +318,36 @@ if uploaded_file is not None:
     n_clean = int(np.sum(qualities))
     n_noisy = n_total - n_clean
 
-    X_features = build_feature_matrix(windows, fs=fs_use)
-    # Add quality indicators for visualization in DataFrame
-    X_features["quality_ok"] = qualities
-
-    st.subheader("Extracted Window Features")
-    st.dataframe(X_features.head(min(5, len(X_features))))
-
-    # Predict with Random Forest (excluding the helper column)
-    predictions = model.predict_proba(X_features.drop(columns=["quality_ok"]))[:, 1]
+    X_hrv = build_feature_matrix(windows, fs=fs_use)
+    
+    if model_type == "Baseline RF (HRV only)":
+        X_features = X_hrv.copy()
+        X_features["quality_ok"] = qualities
+        st.subheader("Extracted HRV Features")
+        st.dataframe(X_features.head(min(5, len(X_features))))
+        predictions = rf_model.predict_proba(X_hrv)[:, 1]
+    else: # Hybrid Model (Fusion)
+        # 1. Scale raw windows
+        windows_scaled = scaler.transform(windows)
+        windows_nn = np.expand_dims(windows_scaled, axis=-1)
+        
+        # 2. Extract deep features
+        import tensorflow as tf
+        feature_extractor = tf.keras.Model(inputs=cnn_model.input, outputs=cnn_model.get_layer("deep_features").output)
+        deep_features = feature_extractor.predict(windows_nn, verbose=0)
+        
+        # 3. Concatenate HRV features and deep features
+        X_hybrid = np.hstack([X_hrv.values, deep_features])
+        
+        # Create a DataFrame for display
+        hybrid_feature_names = list(X_hrv.columns) + [f"deep_feature_{i}" for i in range(16)]
+        X_features = pd.DataFrame(X_hybrid, columns=hybrid_feature_names)
+        X_features["quality_ok"] = qualities
+        
+        st.subheader("Extracted Hybrid Features (9 HRV + 16 Deep Features)")
+        st.dataframe(X_features.head(min(5, len(X_features))))
+        
+        predictions = hybrid_rf.predict_proba(X_hybrid)[:, 1]
     
     # 1. Apply custom decision threshold
     pred_labels_raw = (predictions >= prob_threshold).astype(int)
@@ -376,6 +436,59 @@ if uploaded_file is not None:
         axs[i].grid(True)
 
     st.pyplot(fig)
+
+    # ------------------------------------------------------------------
+    # Model Explainability Section
+    # ------------------------------------------------------------------
+    st.markdown("---")
+    st.subheader("Giải thích quyết định của mô hình (Model Explainability)")
+    
+    from evaluation.explainability import plot_gradcam_1d, compute_gradcam_1d, plot_rf_feature_importances
+    
+    if model_type == "Baseline RF (HRV only)":
+        st.write("Dưới đây là mức độ quan trọng của các đặc trưng HRV trong mô hình Random Forest Baseline:")
+        feat_importances = rf_model.feature_importances_
+        feat_names = list(X_hrv.columns)
+        fig_imp, _ = plot_rf_feature_importances(feat_importances, feat_names, title="Mức độ quan trọng đặc trưng HRV (Baseline RF)")
+        st.pyplot(fig_imp)
+    else: # Hybrid Model
+        st.write("Mô hình Hybrid kết hợp các đặc trưng HRV truyền thống và đặc trưng học sâu tự động (Deep Features) từ CNN + BiLSTM:")
+        
+        tab1, tab2 = st.tabs(["Đặc trưng quan trọng (Hybrid Feature Importance)", "Bản đồ nhiệt Grad-CAM 1D (Deep Learning)"])
+        
+        with tab1:
+            st.write("Mức độ quan trọng của 25 đặc trưng lai (9 HRV + 16 đặc trưng sâu):")
+            feat_importances = hybrid_rf.feature_importances_
+            feat_names = list(X_features.drop(columns=["quality_ok"]).columns)
+            fig_imp, _ = plot_rf_feature_importances(feat_importances, feat_names, title="Đặc trưng quan trọng nhất (Hybrid Random Forest)")
+            st.pyplot(fig_imp)
+            
+        with tab2:
+            st.write("Grad-CAM 1D giúp trực quan hóa các vùng tín hiệu mà phần mạng học sâu (CNN) chú ý nhất khi đưa ra quyết định AF:")
+            clean_wins = np.where(qualities)[0]
+            if len(clean_wins) > 0:
+                selected_win_idx = st.selectbox(
+                    "Chọn cửa sổ tín hiệu sạch để phân tích Grad-CAM:",
+                    options=clean_wins,
+                    format_func=lambda idx: f"Cửa sổ {idx + 1} (Xác suất AF = {predictions[idx]*100:.1f}%)"
+                )
+                
+                # Get signal and scale
+                win_signal = windows[selected_win_idx]
+                win_scaled = windows_scaled[selected_win_idx]
+                
+                # Compute 1D Grad-CAM
+                heatmap = compute_gradcam_1d(cnn_model, win_scaled, layer_name="conv1d_1")
+                
+                fig_cam, _ = plot_gradcam_1d(
+                    win_signal, 
+                    heatmap, 
+                    title=f"Grad-CAM 1D - Cửa sổ {selected_win_idx + 1} (Xác suất AF = {predictions[selected_win_idx]*100:.1f}%)"
+                )
+                st.pyplot(fig_cam)
+                st.info("💡 **Giải thích Grad-CAM**: Các điểm màu đỏ biểu thị vùng tín hiệu có đóng góp quan trọng nhất thúc đẩy mô hình kết luận AF. Mô hình thường chú ý vào vùng nhịp tim không đều hoặc đỉnh sóng mạch bị suy yếu biên độ.")
+            else:
+                st.warning("Không có cửa sổ sạch nào để thực hiện Grad-CAM.")
 
     # Download predictions
     # Save adjusted prediction text

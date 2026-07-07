@@ -10,18 +10,18 @@ from sklearn.metrics import classification_report, confusion_matrix, roc_auc_sco
 from sklearn.model_selection import StratifiedKFold
 
 # Define paths
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-ARCHIVE_ROOT = PROJECT_ROOT / "archive"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+ARCHIVE_ROOT = PROJECT_ROOT / "data" / "raw" / "mimic"
 MODELS_DIR   = PROJECT_ROOT / "models"
 REPORTS_DIR  = PROJECT_ROOT / "reports"
 
 MODELS_DIR.mkdir(parents=True, exist_ok=True)
 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
-# Add code folder to path and import pipeline functions
-sys.path.insert(0, str(PROJECT_ROOT / "code"))
-from ppg_pipeline import load_archive_dataset, get_recording_fs, get_recording_signal, get_recording_label
-from ppg_pipeline_apg import segment_and_extract_apg_features
+# Add src folder to path and import pipeline functions
+sys.path.insert(0, str(PROJECT_ROOT / "src"))
+from pipeline.ppg_pipeline import load_archive_dataset, get_recording_fs, get_recording_signal, get_recording_label
+from pipeline.ppg_pipeline_apg import segment_and_extract_apg_features
 
 # Hyperparameters
 WINDOW_SEC  = 5.0

@@ -23,17 +23,17 @@ import numpy as np
 import pandas as pd
 
 # Define paths
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 MODEL_PATH   = PROJECT_ROOT / "models" / "ppg_af_rf.joblib"
-ARM_DIR      = PROJECT_ROOT / "arm"
-WRIST_DIR    = PROJECT_ROOT / "wrist-down"
-OUTPUTS_DIR  = PROJECT_ROOT / "outputs"
+ARM_DIR      = PROJECT_ROOT / "data" / "raw" / "huywatch" / "arm"
+WRIST_DIR    = PROJECT_ROOT / "data" / "raw" / "huywatch" / "wrist-down"
+REPORTS_DIR  = PROJECT_ROOT / "reports"
 
-OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
+REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
-# Add code folder to path and import pipeline functions
-sys.path.insert(0, str(PROJECT_ROOT / "code"))
-from ppg_pipeline import (
+# Add src folder to path and import pipeline functions
+sys.path.insert(0, str(PROJECT_ROOT / "src"))
+from pipeline.ppg_pipeline import (
     build_feature_matrix,
     detect_beats,
     preprocess_ppg,
@@ -213,7 +213,7 @@ def main() -> None:
     print("\n" + report_text)
 
     # Save report
-    report_path = OUTPUTS_DIR / "folders_summary.txt"
+    report_path = REPORTS_DIR / "folders_summary.txt"
     report_path.write_text(report_text, encoding="utf-8")
     print(f"\nSummary report saved to: {report_path}")
 

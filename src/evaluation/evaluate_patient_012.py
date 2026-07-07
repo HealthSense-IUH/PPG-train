@@ -21,17 +21,17 @@ import pandas as pd
 from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score
 
 # Define paths
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-PPG_MAT_PATH = PROJECT_ROOT / "data" / "012_PPG.mat"
-ECG_MAT_PATH = PROJECT_ROOT / "data" / "012_ECG.mat"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+PPG_MAT_PATH = PROJECT_ROOT / "data" / "raw" / "012_PPG.mat"
+ECG_MAT_PATH = PROJECT_ROOT / "data" / "raw" / "012_ECG.mat"
 MODEL_PATH   = PROJECT_ROOT / "models" / "ppg_af_rf.joblib"
-OUTPUTS_DIR  = PROJECT_ROOT / "outputs"
+OUTPUTS_DIR  = PROJECT_ROOT / "data" / "processed"
 
 OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
 
-# Add code folder to path and import pipeline functions
-sys.path.insert(0, str(PROJECT_ROOT / "code"))
-from ppg_pipeline import (
+# Add src folder to path and import pipeline functions
+sys.path.insert(0, str(PROJECT_ROOT / "src"))
+from pipeline.ppg_pipeline import (
     build_feature_matrix,
     preprocess_ppg,
     segment_signal,
